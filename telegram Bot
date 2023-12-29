@@ -1,0 +1,78 @@
+from typing import Final
+from telegram import Update
+from telegram.ext import CommandHandler,Application,MessageHandler,filters,ContextTypes
+
+TOKEN: Final = '6961382039:AAHybrbiGfJRUtMTLwk7PXZN_tU85daPqnc'
+BOT_USERNAME: Final = '@mmmelon_bot'
+
+
+# -------------commands
+async def start_command(update: Update,context:ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Hello ! Thanks for chatting with me ! I am a melon!')
+
+async def help_command(update: Update,context:ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('I am a melon! Please type something so I can respond!')
+
+
+async def custom_command(update: Update,context:ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('This is a custom command!')
+
+
+
+    # -------------------responses---------------->every code proccess
+def handle_response(text: str) -> str:
+    processed: str = text.lower()
+    if 'hello' in processed:
+        return 'Hey there!'
+    if 'how are you' in processed:
+        return 'I am good!'
+    if 'i love python' in processed:
+        return 'Remember to subscribe!'
+    
+    return 'I do not underestand what you wrote...'
+
+
+async def handle_message(update: Update,context: ContextTypes.DEFAULT_TYPE):
+    message_type: str = update.message.chat.type
+    text: str = update.message.text
+
+    print(f'User ({update.message.chat.id}) in {message_type}: "{text}"')
+
+    if message_type == 'group':
+        if BOT_USERNAME in text:
+            new_text: str = text.replace(BOT_USERNAME, ' ').strip()
+            response: str = handle_response(new_text)
+        else:
+            return
+    else:
+        response: str = handle_response(text)
+
+    print('bot: ',response)
+    await update.message.reply_text(response)
+
+
+async def eror(update: Update,context: ContextTypes.DEFAULT_TYPE):
+    print(f'Update {update} caused eror {context.error}')
+
+
+
+if __name__ == '__main__':
+    print('Starting bot...')
+    app = Application.builder().token(TOKEN).build()
+
+
+# ------------------commands
+    app.add_handler(CommandHandler('start' , start_command))
+    app.add_handler(CommandHandler('help' , help_command))
+    app.add_handler(CommandHandler('custom' , custom_command))
+
+
+    # -------------Messeges
+    app.add_handler(MessageHandler(filters.TEXT,handle_message))
+    # app.run_polling(poll_interval=3)
+
+    # -------------Erors
+    app.add_error_handler(eror)
+    # ------------polls the bot
+    print('polling...')
+    app.run_polling(poll_interval=3)
